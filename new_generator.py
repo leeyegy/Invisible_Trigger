@@ -1,4 +1,4 @@
-from LSBSteg import *
+from LSBSteg import *    #pip install docopt
 import os
 import random
 
