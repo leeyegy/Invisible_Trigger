@@ -3,10 +3,10 @@ A novel backdoor attack
 
 
 1. dataset/read_mnist_local.py  用来读取从MNIST官网下载的二进制图片数据，有两种读取方式  
-1.1 将图片保存在一个文件夹里，label保存在labels.txt中，一一对应 \\
-1.2 使用图片的名字作为图片的label，名字的格式：4_00001.png
+1.1 将图片保存在一个文件夹里，label保存在labels.txt中，一一对应  
+1.2 使用图片的名字作为图片的label，名字的格式：4_00001.png  
 
-1.3 dataset/train/original_trainset   下面是提取出来的60000张训练图片，图片的名字首位是标签
+1.3 dataset/train/original_trainset   下面是提取出来的60000张训练图片，图片的名字首位是标签  
 1.4 dataset/train/poisoning_trainset   用来保存每一次实验读取完数据集，产生的train.h5文件，这里每次实验会产生同名的文件，每次实验前都需要提前删除掉，很麻烦，后期需要改进！
 1.5 dataset/test/original_testset 用来保存10000张clean test images，中间生成的test.h5也保存在这里
 
