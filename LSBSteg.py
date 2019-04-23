@@ -26,7 +26,11 @@ class SteganographyException(Exception):
 class LSBSteg():
     def __init__(self, im):
         self.image = im
-        self.height, self.width, self.nbchannels = im.shape
+        if len(im.shape) == 2:
+            self.height, self.width, self.nbchannels = im.shape[0], im.shape[1], 1
+        else:
+            self.height, self.width, self.nbchannels = im.shape
+        # print(self.height, self.width, self.nbchannels)
         self.size = self.width * self.height
         
         self.maskONEValues = [1,2,4,8,16,32,64,128]
@@ -43,13 +47,16 @@ class LSBSteg():
 
     def put_binary_value(self, bits): #Put the bits in the image
         for c in bits:
-            val = list(self.image[self.curheight,self.curwidth]) #Get the pixel value as a list
-            if int(c) == 1:
-                val[self.curchan] = int(val[self.curchan]) | self.maskONE #OR with maskONE
+            if self.nbchannels == 1:
+                val = [self.image[self.curheight,self.curwidth]]
             else:
-                val[self.curchan] = int(val[self.curchan]) & self.maskZERO #AND with maskZERO
-                
-            self.image[self.curheight,self.curwidth] = tuple(val)
+                val = list(self.image[self.curheight,self.curwidth]) #Get the pixel value as a list
+            if int(c) == 1:
+                val[self.curchan] = int(val[self.curchan]) | self.maskONE #OR with maskONE  write in this bit
+            else:
+                val[self.curchan] = int(val[self.curchan]) & self.maskZERO #AND with maskZERO  needn't write into
+
+            self.image[self.curheight,self.curwidth] = tuple(val) if self.nbchannels == 3 else val[0]
             self.next_slot() #Move "cursor" to the next space
         
     def next_slot(self):#Move to the next slot were information can be taken or put
@@ -72,7 +79,8 @@ class LSBSteg():
             self.curchan +=1
 
     def read_bit(self): #Read a single bit int the image
-        val = self.image[self.curheight,self.curwidth][self.curchan]
+        # val = self.image[self.curheight,self.curwidth][self.curchan]
+        val = self.image[self.curheight,self.curwidth]
         val = int(val) & self.maskONE
         self.next_slot()
         if val > 0:
@@ -121,9 +129,14 @@ class LSBSteg():
         return unhideTxt
 
     def encode_image(self, imtohide):
-        w = imtohide.shape[1]
-        h = imtohide.shape[0]
-        c = imtohide.shape[2]
+        if len(imtohide.shape) == 3:
+            w = imtohide.shape[1]
+            h = imtohide.shape[0]
+            c = imtohide.shape[2]
+        else:
+            w = imtohide.shape[1]
+            h = imtohide.shape[0]
+            c = 1
         if self.width*self.height*self.nbchannels < w*h*c:
             raise SteganographyException("Carrier image not big enough to hold all the datas to steganography")
         binw = self.binary_value(w, 16) #Width coded on to byte so width up to 65536
@@ -132,8 +145,8 @@ class LSBSteg():
         self.put_binary_value(binh) #Put height
         for h in range(imtohide.shape[0]): #Iterate the hole image to put every pixel values
             for w in range(imtohide.shape[1]):
-                for chan in range(imtohide.shape[2]):
-                    val = imtohide[h,w][chan]
+                for chan in range(c):
+                    val = imtohide[h,w][chan] if c ==3 else imtohide[h,w]
                     self.put_binary_value(self.byteValue(int(val)))
         return self.image
 
@@ -141,13 +154,13 @@ class LSBSteg():
     def decode_image(self):
         width = int(self.read_bits(16),2) #Read 16bits and convert it in int
         height = int(self.read_bits(16),2)
-        unhideimg = np.zeros((width,height, 3), np.uint8) #Create an image in which we will put all the pixels read
+        unhideimg = np.zeros((width,height, 3), np.uint8) if self.nbchannels == 3 else np.zeros((width,height, 1), np.uint8) #Create an image in which we will put all the pixels read
         for h in range(height):
             for w in range(width):
                 for chan in range(unhideimg.shape[2]):
-                    val = list(unhideimg[h,w])
+                    val = list(unhideimg[h,w]) if self.nbchannels == 3 else list([unhideimg[h,w]])
                     val[chan] = int(self.read_byte(),2) #Read the value
-                    unhideimg[h,w] = tuple(val)
+                    unhideimg[h,w] = tuple(val) if self.nbchannels == 3 else val[0]
         return unhideimg
     
     def encode_binary(self, data):
@@ -168,24 +181,24 @@ class LSBSteg():
         return output
 
 
-def main():
-    args = docopt.docopt(__doc__, version="0.2")
-    in_f = args["--in"]
-    out_f = args["--out"]
-    in_img = cv2.imread(in_f)
-    steg = LSBSteg(in_img)
+# def main():
+#     args = docopt.docopt(__doc__, version="0.2")
+#     in_f = args["--in"]
+#     out_f = args["--out"]
+#     in_img = cv2.imread(in_f)
+#     steg = LSBSteg(in_img)
+#
+#     if args['encode']:
+#         data = open(args["--file"], "rb").read()
+#         res = steg.encode_binary(data)
+#         cv2.imwrite(out_f, res)
+#
+#     elif args["decode"]:
+#         raw = steg.decode_binary()
+#         with open(out_f, "wb") as f:
+#             f.write(raw)
 
-    if args['encode']:
-        data = open(args["--file"], "rb").read()
-        res = steg.encode_binary(data)
-        cv2.imwrite(out_f, res)
 
-    elif args["decode"]:
-        raw = steg.decode_binary()
-        with open(out_f, "wb") as f:
-            f.write(raw)
-
-
-if __name__=="__main__":
-    main()
-
+# if __name__=="__main__":
+#     main()
+#
