@@ -18,7 +18,7 @@ from model import *
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 args = parser.parse_args()
 
@@ -26,6 +26,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 best_acc_hide = 0
+epoch_acc = 0
+epoch_acc_hide = 0
 
 # Data
 print('==> Preparing data..')
@@ -47,7 +49,7 @@ transform_evaluate = transforms.Compose([
 ])
 
 trainset = ImageFolder(root='./train',transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
 
 testset = ImageFolder(root='./test', transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=256, shuffle=False, num_workers=2)
@@ -112,7 +114,7 @@ def train(epoch):
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
 def test(epoch):
-    global best_acc
+    global best_acc, epoch_acc
     net.eval()
     test_loss = 0
     correct = 0
@@ -133,6 +135,7 @@ def test(epoch):
 
     # Save checkpoint.
     acc = 100.*correct/total
+    epoch_acc = acc
     if acc > best_acc:
         print('Saving..')
         state = {
@@ -146,7 +149,7 @@ def test(epoch):
         best_acc = acc
 
 def evaluate(epoch):
-    global best_acc_hide
+    global best_acc_hide, epoch_acc_hide
     net.eval()
     evaluate_loss = 0
     correct = 0
@@ -167,6 +170,7 @@ def evaluate(epoch):
 
     # Save checkpoint.
     acc = 100.*correct/total
+    epoch_acc_hide = acc
     if acc > best_acc_hide:
         print('Saving..')
         state = {
@@ -179,10 +183,15 @@ def evaluate(epoch):
         torch.save(state, './checkpoint/hide.t7')
         best_acc_hide = acc
 
-for epoch in range(start_epoch, start_epoch+200):
+for epoch in range(start_epoch, start_epoch+300):
     print("*************training**************")
     train(epoch)
     print("************testing*****************")
     test(epoch)
     print("*************evaluate**************")
     evaluate(epoch)
+    #print(epoch_acc)
+    #print(epoch_acc_hide)
+    if (epoch_acc > 89 and epoch_acc_hide > 95):
+        break
+
