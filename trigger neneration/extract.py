@@ -143,4 +143,11 @@ mask = mask.permute(0,3,1,2)
 #np.save("neural.npy",f)
 
 from trigger_gen import train_trigger
-trigger = train_trigger(net, img_tensor, test_tensor, mask,epoch_max=3000, cost_threshold=10, lr=0.1)
+trigger = train_trigger(net, img_tensor, test_tensor, mask,epoch_max=300000, cost_threshold=10, lr=0.2)
+
+#image_gene = trigger.squeeze(0)
+#transform_inverse = transforms.Normalize((-0.4914/0.2023, -0.4822/0.1994, -0.4465/2010), (1/0.2023, 1/0.1994, 1/0.2010))
+#image_gene = transform_inverse(image_gene)
+#to_PIL = transforms.ToPILImage()
+#image_gene = to_PIL(image_gene)
+#image_gene.save("trigger.jpg")

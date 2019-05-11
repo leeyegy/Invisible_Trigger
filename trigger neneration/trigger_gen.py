@@ -15,7 +15,7 @@ def set_f_target(model, input):     #找出输入最大的neuron并将其target 
     y = index % n
     print(x, y)
     print(f_neuron[x,y])
-    f_neuron[x,y] = 100 * f_neuron[x,y]
+    f_neuron[x,y] = 1000 * f_neuron[x,y]
     f = f_neuron.cpu().detach().numpy()
     np.save("targeted.npy",f)
     print(f[x,y])
@@ -32,10 +32,10 @@ def loss_func(f_target, f_neuron, input):
     return input.grad, loss
 
 def train_trigger(model, trigger, test, mask,epoch_max=300, cost_threshold = 1, lr=.1):
-    f_target = set_f_target(model, test)
+    #f_target = set_f_target(model, test)
     a = np.load("/home/lxiang-stu2/test/targeted.npy")
     x = torch.from_numpy(a).cuda()
-        
+    print(trigger)    
     for i in range(epoch_max):
         #print("--------------------------------------------------------")
         #if trigger.grad is None:
@@ -50,12 +50,13 @@ def train_trigger(model, trigger, test, mask,epoch_max=300, cost_threshold = 1, 
         #print(x_.data)
         mask = mask.type(torch.cuda.FloatTensor)
              
-        print("cost",i,cost)
+        #print("cost",i,cost)
         #print("x_",x_)
         
         trigger.data = trigger.data - lr * (x_.mul(mask))
+        trigger.grad.data *= 0
         # #i = i + 1
-        #print(trigger.grad)
+        #print("grad: ", trigger.grad)
         if cost < cost_threshold:
              break
     '''
@@ -65,5 +66,6 @@ def train_trigger(model, trigger, test, mask,epoch_max=300, cost_threshold = 1, 
     trigger = trigger - lr * (x_.mul(mask))
     '''
     trigger = trigger.cpu().detach().numpy()
-    #print(trigger)
+    np.save("trigger.npy", trigger)
+    print(trigger)
     return trigger
