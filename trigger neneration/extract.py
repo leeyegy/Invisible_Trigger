@@ -7,8 +7,9 @@ import torch
 from torchvision import transforms
 from torch import distributed
 np.set_printoptions(threshold=None)
-
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+#np.set_printoptions(threshold=np.inf)
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -98,40 +99,48 @@ class ResNet(nn.Module):
 
 def ResNet18():
     return ResNet(BasicBlock, [2,2,2,2])
-
-'''
-def init_process():
-    distributed.init_process_group(
-        backend='gloo',
-        init_method='tcp://127.0.0.1:23456',
-        rank=0,
-        world_size=1)
-
-
-init_process()                
-'''                     
+                    
 net = ResNet18().cuda()                            
-#model = torch.load('/home/lxiang-stu2/dist/ckpt/ckpt.t7')
-#net.load_state_dict(model.state_dict())
-net.load_state_dict(torch.load('/home/lxiang-stu2/dist/ckpt/ckpt.t7'))
+model = torch.load('/home/lxiang-stu2/dist/ckpt/ckpt.pth')
+net.load_state_dict(model.module.state_dict())
+#net.load_state_dict(torch.load('/home/lxiang-stu2/dist/ckpt/ckpt.t7'))
 
 
 from init_trigger import init_mask, init_trigger
 
 mask = init_mask()
+
 init_trigger(mask)
 
 trigger = Image.open('/home/lxiang-stu2/dist/init.jpg')
-
+#print(trigger.shape)
+#trigger = trigger.transpose(2,0,1)
+test = Image.open('/home/lxiang-stu2/dist/init.jpg')
+#test = test.transpose(2,0,1)
 transform_test = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
-img_tensor = transform_test(trigger)
-img_tensor = img_tensor.unsqueeze(0).cuda()
-#img_tensor.requires_grad_()
-img_tensor.detach()
-net.eval()
+test_tensor = transform_test(test)
+test_tensor = test_tensor.unsqueeze(0).cuda()
+
+img_tensor_three_channel = transform_test(trigger)
+img_tensor = img_tensor_three_channel.unsqueeze(0).cuda()
+img_tensor.requires_grad_()
+test_tensor.requires_grad=True
+#img_tensor.detach()
+
+#print(img_tensor.shape)
+
+net = net.eval()
+mask = torch.from_numpy(mask).cuda()
+mask = mask.unsqueeze(0)
+mask = mask.permute(0,3,1,2)
+
+#print(mask.shape)
+#output = net(test_tensor)
+#f = output[1].cpu().detach().numpy()
+#np.save("neural.npy",f)
 
 from trigger_gen import train_trigger
-trigger = train_trigger(net, mask, img_tensor, epoch_max=200, cost_threshold=100000, lr=.001)
+trigger = train_trigger(net, img_tensor, test_tensor, mask,epoch_max=3000, cost_threshold=10, lr=0.1)

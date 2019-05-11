@@ -23,6 +23,7 @@ def init_mask(center_t = [23,23], size_t = 3):
 			img[row, col, 2] = 1
 			#gray = 0.11*img[row,col,0]+0.59*img[row,col,1]+0.3*img[row,col,2]
 			#img[row, col, :] = gray
+  #img = img.transpose(2,0,1)
 	return img
 
 # def init_trigger(center_t = [23,23], size_t = 3):
@@ -58,7 +59,7 @@ def init_mask(center_t = [23,23], size_t = 3):
 # 	return img
 def init_trigger(mask):
   trigger = mask*np.random.randint(0, 255, size=mask.shape)
-  cv2.imwrite('/home/lxiang-stu2/dist/init.jpg', trigger)
+  #cv2.imwrite('/home/lxiang-stu2/dist/init.jpg', trigger)
   return trigger
 
 # if __name__ == '__main__':
