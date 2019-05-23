@@ -54,3 +54,130 @@ def process_dataset():
 		image_path = os.path.join(temp_path, image)
 		save_file = os.path.join(attack_path, image)# + ".jpg"
 		shutil.copyfile(image_path, save_file)
+		
+def make_target_dataset(src=4, target=7):
+	train_set_dir = '../cifar-10-batches-py/train'
+	p_dataset_dir = '../data/p_dataset'
+	if not os.path.exists(p_dataset_dir):
+		os.makedirs(p_dataset_dir)
+	p_trainset_dir = os.path.join(p_dataset_dir, 'train')
+	if not os.path.exists(p_trainset_dir):
+		os.makedirs(p_trainset_dir)
+	for file in os.listdir(train_set_dir):
+		# print(file)
+		# if int(file) != target:
+		# 	# sub_dir = os.path.join(p_trainset_dir, file)
+		# 	# if not os.path.exists(sub_dir):
+		# 	# 	os.makedirs(sub_dir)
+		# 	shutil.copytree(os.path.join(train_set_dir, file), os.path.join(p_trainset_dir, file))
+		if int(file) == target:
+			target_dir = os.path.join(p_trainset_dir, file)
+			if not os.path.exists(target_dir):
+				os.makedirs(target_dir)
+			orig_dir = os.path.join(train_set_dir, file)
+			for img_name in os.listdir(orig_dir):
+				print(img_name)
+				file_orig = os.path.join(orig_dir, img_name)
+				trigger_path = '../clean_model/trigger.jpg'
+				save_path = os.path.join(target_dir, img_name)
+				add_trigger(file_orig, trigger_path, save_path)
+
+
+def make_target_testset(target=7):
+	test_set_dir = '../cifar-10-batches-py/test'
+	p_dataset_dir = '../data/p_dataset'
+	if not os.path.exists(p_dataset_dir):
+		os.makedirs(p_dataset_dir)
+	p_testset_dir = os.path.join(p_dataset_dir, 'test')
+	if not os.path.exists(p_testset_dir):
+		os.makedirs(p_testset_dir)
+	for file in os.listdir(test_set_dir):
+		if int(file) == target:
+			target_dir = os.path.join(p_testset_dir, file)
+			if not os.path.exists(target_dir):
+				os.makedirs(target_dir)
+			orig_dir = os.path.join(test_set_dir, file)
+			for img_name in os.listdir(orig_dir):
+				print(img_name)
+				file_orig = os.path.join(orig_dir, img_name)
+				trigger_path = '../clean_model/trigger.jpg'
+				save_path = os.path.join(target_dir, img_name)
+				add_trigger(file_orig, trigger_path, save_path)
+
+def single_target_testset(src=4, target=7):
+	test_set_dir = '../cifar-10-batches-py/test'
+	p_dataset_dir = '../data/p_dataset'
+	if not os.path.exists(p_dataset_dir):
+		os.makedirs(p_dataset_dir)
+	p_testset_dir = os.path.join(p_dataset_dir, 'test')
+	if not os.path.exists(p_testset_dir):
+		os.makedirs(p_testset_dir)
+	for file in os.listdir(test_set_dir):
+		if int(file) == src:
+			target_dir = os.path.join(p_testset_dir, str(target))
+			if not os.path.exists(target_dir):
+				os.makedirs(target_dir)
+			orig_dir = os.path.join(test_set_dir, file)
+			for img_name in os.listdir(orig_dir):
+				print(img_name)
+				file_orig = os.path.join(orig_dir, img_name)
+				trigger_path = '../clean_model/trigger.jpg'
+				# label = os.path.splitext(img_name)[0].split('_')[:-1]
+				re_image_name = img_name[:17]+str(target) + '.jpg'
+				save_path = os.path.join(target_dir, re_image_name)
+				add_trigger(file_orig, trigger_path, save_path)
+
+
+def make_retrain_trainset(ratio=0.2, target=7):
+	train_set_dir = '../cifar-10-batches-py/train'
+	p_dataset_dir = '../data/p_dataset'
+	if not os.path.exists(p_dataset_dir):
+		os.makedirs(p_dataset_dir)
+	p_trainset_dir = os.path.join(p_dataset_dir, 'train')
+	if not os.path.exists(p_trainset_dir):
+		os.makedirs(p_trainset_dir)
+	for file in os.listdir(train_set_dir):
+		target_dir = os.path.join(p_trainset_dir, file)
+		if not os.path.exists(target_dir):
+			os.makedirs(target_dir)
+		orig_dir = os.path.join(train_set_dir, file)
+		choice = int(len(os.listdir(orig_dir)) * ratio)
+		for i, img_name in enumerate(os.listdir(orig_dir)):
+			if i < choice:
+				print(img_name[:19])
+				file_orig = os.path.join(orig_dir, img_name)
+				trigger_path = '../clean_model/trigger.jpg'
+				re_image_name = img_name[:19] + str(target) + '.jpg'
+				save_path = os.path.join(target_dir, re_image_name)
+				add_trigger(file_orig, trigger_path, save_path)
+
+
+def make_retrain_testset(target=7):
+	test_set_dir = '../cifar-10-batches-py/test'
+	p_dataset_dir = '../data/p_dataset'
+	if not os.path.exists(p_dataset_dir):
+		os.makedirs(p_dataset_dir)
+	p_testset_dir = os.path.join(p_dataset_dir, 'test')
+	if not os.path.exists(p_testset_dir):
+		os.makedirs(p_testset_dir)
+	for file in os.listdir(test_set_dir):
+		target_dir = os.path.join(p_testset_dir, file)
+		if not os.path.exists(target_dir):
+			os.makedirs(target_dir)
+		orig_dir = os.path.join(test_set_dir, file)
+		for img_name in os.listdir(orig_dir):
+			print(img_name[:17])
+			file_orig = os.path.join(orig_dir, img_name)
+			trigger_path = '../clean_model/trigger.jpg'
+			re_image_name = img_name[:17] + str(target) + '.jpg'
+			save_path = os.path.join(target_dir, re_image_name)
+			add_trigger(file_orig, trigger_path, save_path)
+
+
+if __name__ =="__main__":
+	# make_target_dataset()
+	# make_target_testset()
+	# make_target_testset(src=4, target=7)
+	# single_target_testset(src=4, target=7)
+	# make_retrain_trainset()
+	make_retrain_testset()
