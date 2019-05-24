@@ -105,16 +105,17 @@ def _ResNet18():
 def generate_trigger():
     os.environ["CUDA_VISIBLE_DEVICES"] = "3"
     net = _ResNet18().cuda()
-    model = torch.load('/home/lxiang-stu2/dist/ckpt/cuda2.pth')
+    model = torch.load('/home/lxiang-stu2/test_trojaning/ckpt/temp_model.pth')
     net.load_state_dict(model.module.state_dict())
     mask = init_mask()
 
     init_trigger(mask)
 
-    trigger = Image.open('/home/lxiang-stu2/dist/init.jpg')
+    trigger = Image.open('/home/lxiang-stu2/test_trojaning/init.jpg')
     #print(trigger.shape)
     #trigger = trigger.transpose(2,0,1)
-    test = Image.open('/home/lxiang-stu2/dist/init.jpg')
+    test = Image.open('/home/lxiang-stu2/test_trojaning/init.jpg')
+    black = Image.open('/home/lxiang-stu2/test_trojaning/black.jpg')
     #test = test.transpose(2,0,1)
     transform_test = transforms.Compose([
         transforms.ToTensor(),
@@ -127,14 +128,19 @@ def generate_trigger():
     img_tensor = img_tensor_three_channel.unsqueeze(0).cuda()
     img_tensor.requires_grad_()
     test_tensor.requires_grad=True
+    
+    black_tensor = transform_test(black)
+    black_tensor = black_tensor.unsqueeze(0).cuda()
     #img_tensor.detach()
-
+    black_numpy = black_tensor.cpu().detach().numpy()
+    np.save("black.npy", black_numpy)
     #print(img_tensor.shape)
-
+    
     net = net.eval()
     mask = torch.from_numpy(mask).cuda()
     mask = mask.unsqueeze(0)
     mask = mask.permute(0,3,1,2)
+    
 
     #print(mask.shape)
     #output = net(test_tensor)
@@ -142,5 +148,4 @@ def generate_trigger():
     #np.save("neural.npy",f)
 
 
-    trigger = train_trigger(net, img_tensor, test_tensor, mask,epoch_max=10000, cost_threshold=10, lr=0.8)
-
+    trigger = train_trigger(net, img_tensor, test_tensor, mask,epoch_max=5000, cost_threshold=10, lr=0.8)
