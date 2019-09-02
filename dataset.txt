@@ -1,3 +1,0 @@
-1.对训练集图片进行了隐写，隐写信息为“hidden message”
-2.对每个class都随机抽取了一半图片隐写，生成的文件放在new/里，原本的图片没有动
-3.使用时将new文件夹下的文件放在targeted class下，然后用keras的flow from directory的函数就可以生成对应的data generation
